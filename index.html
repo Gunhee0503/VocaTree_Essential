@@ -212,9 +212,37 @@
     color:var(--gold);line-height:1}
   .q-result .lbl{font-size:15px;color:#5c4e3c;margin-top:14px}
   .q-result .msg{font-size:13px;color:#7a6a52;margin-top:20px;line-height:1.7}
-  .q-retry{margin-top:30px;background:transparent;border:1.5px solid var(--line);
+  .q-retry{margin-top:14px;background:transparent;border:1.5px solid var(--line);
     color:var(--ink);border-radius:4px;padding:14px 32px;font-family:'Space Mono',monospace;
-    font-size:12px;letter-spacing:2px;cursor:pointer;text-transform:uppercase}
+    font-size:12px;letter-spacing:2px;cursor:pointer;text-transform:uppercase;
+    display:block;width:100%;max-width:340px;margin-left:auto;margin-right:auto}
+  .q-retry:active{transform:scale(.98)}
+  .q-wrong-only{border-color:var(--gold)!important;color:var(--ink)!important;
+    font-weight:700!important;background:rgba(184,137,59,.10)!important}
+
+  /* 의미분류 누적 진행 게이지 */
+  .cls-cum{margin:28px auto 24px;max-width:340px;padding:18px 18px 14px;
+    background:var(--paper2);border:1px solid var(--line);border-radius:10px;
+    text-align:left}
+  .cls-cum-h{display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:10px}
+  .cls-cum-label{font-family:'Space Mono',monospace;font-size:11px;
+    letter-spacing:1.5px;color:#7a6a52;text-transform:uppercase}
+  .cls-cum-pct{font-family:'Fraunces',serif;font-weight:900;font-size:22px}
+  .cls-cum-bar{position:relative;height:10px;background:var(--paper);
+    border-radius:6px;overflow:visible;border:1px solid var(--line)}
+  .cls-cum-fill{position:absolute;left:0;top:0;height:100%;border-radius:6px;
+    transition:width .6s ease}
+  /* 80% 통과선 마커 */
+  .cls-cum-mark{position:absolute;left:80%;top:-3px;bottom:-3px;width:2px;
+    background:var(--ink);opacity:.65}
+  .cls-cum-mark::after{content:"80%";position:absolute;left:50%;top:-18px;
+    transform:translateX(-50%);font-family:'Space Mono',monospace;font-size:9px;
+    color:var(--ink);font-weight:700;letter-spacing:.5px;white-space:nowrap}
+  .cls-cum-foot{display:flex;justify-content:space-between;margin-top:12px;
+    font-family:'Space Mono',monospace;font-size:10.5px;color:#7a6a52;
+    letter-spacing:.5px}
+  .cls-cum-goal{color:var(--gold);font-weight:700}
 
   /* quiz mode menu */
   .qmenu{padding:24px 4px}
@@ -1355,6 +1383,56 @@ function isClassifyCleared(){
   return (d.cls||0)>=80;
 }
 
+/* ===== 의미분류 누적 진행 상태 =====
+   세션 정답률이 아니라, 각 단어를 끝까지 맞혔는지의 누적으로 80% 판정.
+   correct: 누적 정답 단어 목록 / wrong: 아직 틀린 단어 목록
+   다시 풀어서 맞히면 wrong에서 correct로 이동 → 누적 정답률 상승 */
+function clsProgKey(){ return 'vte_cls_progress_lesson'+currentLessonNo; }
+function getClsProgress(){
+  try{
+    const raw=localStorage.getItem(clsProgKey());
+    if(!raw) return {correct:[], wrong:[]};
+    const d=JSON.parse(raw);
+    return {correct: d.correct||[], wrong: d.wrong||[]};
+  }catch(e){ return {correct:[], wrong:[]}; }
+}
+function saveClsProgress(prog){
+  try{ localStorage.setItem(clsProgKey(), JSON.stringify(prog)); }catch(e){}
+}
+function markClsAnswer(word, correct){
+  const p=getClsProgress();
+  const w=word.toLowerCase();
+  if(correct){
+    if(!p.correct.includes(w)) p.correct.push(w);
+    p.wrong = p.wrong.filter(x=>x!==w);
+  }else{
+    if(!p.correct.includes(w) && !p.wrong.includes(w)) p.wrong.push(w);
+  }
+  saveClsProgress(p);
+  /* 누적 정답률을 cls 점수에 반영 → 80% 도달 시 잠금 해제 */
+  const total = totalClsWords();
+  if(total>0){
+    const pct = Math.round(p.correct.length / total * 100);
+    /* markPartDone은 80% 미만은 저장 안 하므로, 누적은 별도로 저장 */
+    const d=getPartDone();
+    d.cls = pct;  // 직접 갱신 (markPartDone의 80%+ 제약 우회)
+    _partMem=d;
+    try{ localStorage.setItem(partKey(), JSON.stringify(d)); }catch(e){}
+  }
+}
+function totalClsWords(){
+  let n=0;
+  if(typeof DATA!=='undefined' && DATA && DATA.word_tree){
+    DATA.word_tree.forEach(g=>{ n+=g.words.length; });
+  }
+  return n;
+}
+function clsAccuracyPct(){
+  const total=totalClsWords();
+  if(total===0) return 0;
+  return Math.round(getClsProgress().correct.length / total * 100);
+}
+
 function quizMenu(){
   const wrap=document.getElementById('quizWrap');
   document.documentElement.style.setProperty('--gold','#b8893b');
@@ -1807,11 +1885,18 @@ const CLS_OPTS=[
   "5. 선을 넘다 · 위반하다",
   "6. ~를 통해 · ~에 의해(by)",
 ];
-function startClassify(){
+function startClassify(wrongOnly){
   go('classify');
   Q=[];
+  /* 틀린 문제만 풀기 모드: 누적 wrong 목록만 출제. 비어있으면 전체 풀기로 폴백 */
+  let onlyWords = null;
+  if(wrongOnly){
+    const wrong = getClsProgress().wrong;
+    if(wrong.length>0) onlyWords = new Set(wrong);
+  }
   DATA.word_tree.forEach((g,gi)=>{
     g.words.forEach(w=>{
+      if(onlyWords && !onlyWords.has(w.toLowerCase())) return;
       const d=CLSDATA[w.toLowerCase()];
       Q.push({
         word:w,
@@ -1828,6 +1913,8 @@ function startClassify(){
   document.documentElement.style.setProperty('--gold','#b8893b');
   renderClassify();
 }
+/* 편의 함수: 틀린 것만 풀기 진입 */
+function startClassifyWrongOnly(){ startClassify(true); }
 /* 영어 예문 음성 재생 (브라우저 내장 TTS) */
 let _enVoice=null;
 function pickEnVoice(){
@@ -1912,6 +1999,8 @@ function answerClassify(btn,idx,q){
   });
   if(!right){ btn.classList.add('wrong'); }
   else qScore++;
+  /* 누적 진행 갱신 (한 단어를 다시 풀어 맞히면 wrong→correct로 이동) */
+  markClsAnswer(q.word, right);
 
   // 큰 정/오답 배너
   const card=document.querySelector('.q-card');
@@ -1941,32 +2030,78 @@ function showResult(kind,backTo){
   const wrap=document.getElementById(backTo==='classify'?'classifyWrap':'quizWrap');
   const pct=Math.round(qScore/Q.length*100);
   if(kind==='어휘 추리력') markPartDone('p1',pct);
-  if(kind==='의미 분류') markPartDone('cls',pct);
+  /* 의미분류는 markClsAnswer가 이미 누적 점수를 cls에 저장함. 여기선 추가 처리 안 함. */
   const isClassify = (backTo==='classify');
-  const passed = pct>=80;
-  let msg;
   if(isClassify){
-    msg = passed
-      ? `개념이 잡혔습니다. 이제 ${LESSON().root}의 어원 이미지가 머리에 박혔어요.\n실전 문제로 어휘력을 점검해보세요.`
-      : pct>=50 ? '절반 이상 통과했습니다.\n80% 이상 맞아야 실전 문제가 열립니다. 한 번 더!'
-                : '어원 트리로 돌아가\n이미지부터 다시 그려보면 좋아요.';
-  } else {
-    msg = passed ? '어원의 이미지가 확실히 잡혔습니다.\n다음 Part로 이어가세요.'
-        : pct>=50 ? '절반 이상 통과했습니다.\n틀린 단어는 어원 풀이를 다시 떠올려보세요.'
-                  : '어원 트리로 돌아가\n이미지부터 다시 그려보면 좋아요.';
+    return showClassifyResult(pct);  // 누적 진행 기반 전용 결과
   }
-  const retryFn = isClassify ? 'startClassify()' : 'quizMenu()';
-  const retryLabel = isClassify ? '다시 풀기' : '실전 문제 메뉴로';
-  /* 의미분류 통과 시 실전문제로 가는 강조 버튼 추가 */
-  const ctaToQuiz = (isClassify && passed)
-    ? `<button class="q-retry q-cta-primary" onclick="go('quiz')">실전 문제로 가기 ›</button>`
-    : '';
+  const passed = pct>=80;
+  const msg = passed ? '어원의 이미지가 확실히 잡혔습니다.\n다음 Part로 이어가세요.'
+      : pct>=50 ? '절반 이상 통과했습니다.\n틀린 단어는 어원 풀이를 다시 떠올려보세요.'
+                : '어원 트리로 돌아가\n이미지부터 다시 그려보면 좋아요.';
   wrap.innerHTML=`<div class="q-result">
     <div class="score">${pct}<span style="font-size:24px">%</span></div>
     <div class="lbl">${qScore} / ${Q.length} 정답 · ${kind} 퀴즈</div>
     <div class="msg">${msg.replace(/\n/g,'<br>')}</div>
+    <button class="q-retry" onclick="quizMenu()">실전 문제 메뉴로</button>
+  </div>`;
+}
+
+/* ===== 의미분류 결과 (누적 진행 기반) =====
+   이번 세션 점수 + 누적 정답률(80% 게이지) + 틀린 문제 다시 풀기 옵션 */
+function showClassifyResult(sessionPct){
+  const wrap=document.getElementById('classifyWrap');
+  const prog=getClsProgress();
+  const total=totalClsWords();
+  const accPct=clsAccuracyPct();
+  const cleared=accPct>=80;
+  const wrongLeft=prog.wrong.length;
+
+  let msg;
+  if(cleared){
+    msg = `누적 정답률 ${accPct}% · 개념이 확실히 잡혔습니다.\n실전 문제가 열려 있어요.`;
+  } else {
+    const needed = Math.ceil(total*0.8) - prog.correct.length;
+    msg = wrongLeft>0
+      ? `누적 정답률 ${accPct}% · 80% 도달까지 ${needed}개 더 맞히면 됩니다.\n틀린 문제만 다시 풀어 채워보세요.`
+      : `누적 정답률 ${accPct}% · 한 번 더 풀어 점수를 올려보세요.`;
+  }
+
+  /* 진행 게이지 (누적 정답 / 전체) */
+  const gaugePct = Math.min(accPct, 100);
+  const gaugeColor = cleared ? '#5B8C5A' : 'var(--gold)';
+
+  const ctaToQuiz = cleared
+    ? `<button class="q-retry q-cta-primary" onclick="go('quiz')">실전 문제로 가기 ›</button>`
+    : '';
+  const wrongOnlyBtn = (wrongLeft>0 && !cleared)
+    ? `<button class="q-retry q-wrong-only" onclick="startClassifyWrongOnly()">틀린 문제만 다시 풀기 (${wrongLeft}개)</button>`
+    : '';
+  const retryAllBtn = `<button class="q-retry" onclick="startClassify()">${cleared?'전체 다시 풀기':'처음부터 다시 풀기'}</button>`;
+
+  wrap.innerHTML=`<div class="q-result">
+    <div class="score">${sessionPct}<span style="font-size:24px">%</span></div>
+    <div class="lbl">이번 세션: ${qScore} / ${Q.length} 정답</div>
+
+    <div class="cls-cum">
+      <div class="cls-cum-h">
+        <span class="cls-cum-label">누적 정답률</span>
+        <span class="cls-cum-pct" style="color:${gaugeColor}">${accPct}%</span>
+      </div>
+      <div class="cls-cum-bar">
+        <div class="cls-cum-fill" style="width:${gaugePct}%;background:${gaugeColor}"></div>
+        <div class="cls-cum-mark" title="80% 통과선"></div>
+      </div>
+      <div class="cls-cum-foot">
+        <span>${prog.correct.length} / ${total} 단어 맞힘</span>
+        <span class="cls-cum-goal">목표 80%</span>
+      </div>
+    </div>
+
+    <div class="msg">${msg.replace(/\n/g,'<br>')}</div>
     ${ctaToQuiz}
-    <button class="q-retry" onclick="${retryFn}">${retryLabel}</button>
+    ${wrongOnlyBtn}
+    ${retryAllBtn}
   </div>`;
 }
 
