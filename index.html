@@ -234,6 +234,34 @@
     text-align:center;border-top:1px dashed var(--line);padding-top:18px}
   .qmenu-note b{color:var(--gold);cursor:pointer;border-bottom:1px solid var(--gold)}
 
+  /* 의미분류 미통과 시 잠금 안내 배너 */
+  .quiz-gate{margin:0 0 22px;padding:24px 22px;border:2px solid var(--gold);
+    border-radius:12px;background:linear-gradient(160deg,rgba(184,137,59,.16),rgba(184,137,59,.04));
+    text-align:center;box-shadow:0 10px 28px -10px rgba(184,137,59,.5)}
+  .qg-badge{display:inline-block;background:var(--ink);color:var(--gold);
+    font-family:'Space Mono',monospace;font-size:10px;font-weight:700;
+    letter-spacing:2.5px;padding:5px 12px;border-radius:20px;margin-bottom:12px}
+  .qg-title{font-family:'Fraunces',serif;font-weight:900;font-size:22px;
+    color:var(--ink);letter-spacing:-.3px;margin-bottom:12px}
+  .qg-desc{font-family:'Gowun Batang',serif;font-size:13px;color:#5c4e3c;
+    line-height:1.75;margin-bottom:18px}
+  .qg-desc b{color:var(--ink)}
+  .qg-cta{background:var(--ink);color:var(--paper);border:none;border-radius:8px;
+    padding:15px 28px;font-family:'Space Mono',monospace;font-size:12.5px;
+    letter-spacing:1.5px;font-weight:700;cursor:pointer;text-transform:uppercase;
+    box-shadow:0 6px 16px -6px rgba(40,28,16,.45);transition:transform .15s}
+  .qg-cta:active{transform:scale(.97)}
+
+  /* 의미분류 통과 시 가벼운 통과 배너 */
+  .quiz-pass{display:flex;align-items:center;gap:10px;margin:0 0 16px;
+    padding:11px 16px;background:rgba(91,140,90,.10);border-left:3px solid #5B8C5A;
+    border-radius:6px}
+  .qp-check{display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:22px;background:#5B8C5A;color:#fff;border-radius:50%;
+    font-weight:900;font-size:13px}
+  .qp-text{font-family:'Gowun Batang',serif;font-size:12.5px;color:#3c6b3a;
+    font-weight:700;letter-spacing:.3px}
+
   /* Part 카드 (실전 문제) */
   .qpart{display:block;width:100%;text-align:left;background:var(--paper2);
     border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:13px;
@@ -375,19 +403,55 @@
     border-bottom:2px solid var(--gold);padding-bottom:1px}
   .cls-tip .ct-ex .ko{font-size:12px;color:#7a6a52;margin-top:7px;line-height:1.5}
 
-  /* 트리 화면 → 개념 분류 퀴즈 진입 CTA */
-  .concept-cta{margin:26px 16px 4px;border:1px solid var(--gold);border-radius:8px;
-    background:linear-gradient(160deg,rgba(184,137,59,.10),rgba(184,137,59,.03));
-    padding:20px 20px 22px;text-align:center;cursor:pointer;position:relative;
-    transition:transform .16s}
+  /* 트리 화면 → 개념 분류 퀴즈 진입 CTA (필수 관문) */
+  .concept-cta{position:relative;margin:28px 16px 14px;
+    border:2px solid var(--gold);border-radius:12px;
+    background:linear-gradient(160deg,rgba(184,137,59,.16),rgba(184,137,59,.04));
+    padding:24px 22px 26px;text-align:center;cursor:pointer;
+    transition:transform .16s, box-shadow .2s;
+    box-shadow:0 10px 28px -10px rgba(184,137,59,.5)}
+  .concept-cta::before{content:"";position:absolute;inset:-2px;
+    border-radius:12px;border:2px solid var(--gold);opacity:.4;
+    animation:ccPulse 2.4s ease-in-out infinite;pointer-events:none}
+  @keyframes ccPulse{
+    0%,100%{transform:scale(1);opacity:.4}
+    50%{transform:scale(1.025);opacity:0}}
   .concept-cta:active{transform:scale(.98)}
+  .cc-must{display:inline-block;background:var(--ink);color:var(--gold);
+    font-family:'Space Mono',monospace;font-size:10px;font-weight:700;
+    letter-spacing:2.5px;padding:5px 12px;border-radius:20px;margin-bottom:14px;
+    text-transform:uppercase}
   .cc-tag{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;
     color:var(--gold);text-transform:uppercase}
-  .cc-title{font-family:'Fraunces',serif;font-weight:900;font-size:22px;margin:9px 0 8px}
-  .cc-desc{font-size:12.5px;color:#5c4e3c;line-height:1.7}
-  .cc-go{display:inline-block;margin-top:16px;background:var(--root);color:var(--paper);
-    font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px;
-    padding:11px 26px;border-radius:4px;text-transform:uppercase}
+  .cc-title{font-family:'Fraunces',serif;font-weight:900;font-size:26px;margin:8px 0 10px;
+    color:var(--ink);letter-spacing:-.3px}
+  .cc-desc{font-size:13px;color:#5c4e3c;line-height:1.75}
+  .cc-desc b{color:var(--ink)}
+  .cc-go{display:inline-block;margin-top:18px;background:var(--ink);color:var(--paper);
+    font-family:'Space Mono',monospace;font-size:13px;letter-spacing:2px;
+    padding:13px 30px;border-radius:6px;text-transform:uppercase;font-weight:700;
+    box-shadow:0 6px 16px -6px rgba(40,28,16,.45)}
+  /* 의미분류 통과 완료 상태 */
+  .concept-cta.cleared{border-color:#5B8C5A;
+    background:linear-gradient(160deg,rgba(91,140,90,.14),rgba(91,140,90,.04));
+    box-shadow:0 6px 18px -8px rgba(91,140,90,.4)}
+  .concept-cta.cleared::before{border-color:#5B8C5A;animation:none;opacity:0}
+  .concept-cta.cleared .cc-must{background:#5B8C5A;color:#fff}
+  .concept-cta.cleared .cc-tag{color:#5B8C5A}
+  .concept-cta.cleared .cc-go{background:#5B8C5A}
+
+  /* 트리 화면 하단 인트로 재시청 버튼 */
+  .tree-foot-btn{display:block;width:calc(100% - 32px);margin:18px 16px 8px;
+    background:transparent;border:1px dashed var(--line);border-radius:8px;
+    padding:14px;font-family:'Space Mono',monospace;font-size:11.5px;
+    letter-spacing:1.5px;color:#7a6a52;cursor:pointer;transition:all .15s}
+  .tree-foot-btn:active{transform:scale(.98);background:var(--paper2)}
+  .tree-foot-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+  /* 결과 화면의 강조 CTA (의미분류 통과 → 실전문제로) */
+  .q-cta-primary{background:var(--gold)!important;color:#fff!important;
+    box-shadow:0 8px 22px -8px rgba(184,137,59,.55);margin-bottom:10px!important;
+    font-weight:700!important}
 
   /* ===== 의미 분류 퀴즈 ===== */
   .cls-word{font-family:'Fraunces',serif;font-weight:900;font-size:40px;
@@ -889,12 +953,19 @@
 
         <div class="tree-hint">▴ 뿌리에서 솟은 가지를 눌러 단어를 펼치세요 ▴</div>
 
-        <div class="concept-cta" onclick="startClassify()">
+        <div class="concept-cta" id="conceptCta" onclick="startClassify()">
+          <div class="cc-must">REQUIRED · 필수 관문</div>
           <div class="cc-tag">CONCEPT CHECK · 개념 다지기</div>
           <div class="cc-title">의미 분류 퀴즈</div>
-          <div class="cc-desc">단어와 예문을 보고, 그 단어가 per‑의<br>여섯 이미지 중 어디서 나왔는지 골라보세요</div>
-          <div class="cc-go">시작하기 ›</div>
+          <div class="cc-desc">단어가 어원의 어떤 이미지에서 나왔는지 분류하는 연습입니다.<br>
+            <b>80% 이상 통과해야 실전 문제가 열립니다.</b></div>
+          <div class="cc-go" id="ccGo">시작하기 ›</div>
         </div>
+
+        <!-- 인트로 다시 보기 -->
+        <button class="tree-foot-btn" onclick="showIntro()">
+          ↺ 보카트리 학습법 다시 보기 (인트로)
+        </button>
       </div>
       <svg class="tree" id="treeSvg" viewBox="0 0 420 560" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
@@ -1263,11 +1334,12 @@ function updateRings(){
 let Q=[], qi=0, qScore=0;
 
 /* 퀴즈 탭 = 실전 문제 (문장 적용) */
-/* Part 완료 상태 (80%+ 정답률). localStorage에 세션 간 저장 */
-const PART_KEY='vte_part_done_lesson'+currentLessonNo;
+/* Part 완료 상태 (80%+ 정답률). localStorage에 세션 간 저장.
+   강마다 별도 키. 의미분류퀴즈도 같은 객체에 'cls'로 기록. */
+function partKey(){ return 'vte_part_done_lesson'+currentLessonNo; }
 let _partMem={};
 function getPartDone(){
-  try{ return JSON.parse(localStorage.getItem(PART_KEY)||'{}'); }
+  try{ return JSON.parse(localStorage.getItem(partKey())||'{}'); }
   catch(e){ return _partMem; }
 }
 function markPartDone(part,pct){
@@ -1275,48 +1347,83 @@ function markPartDone(part,pct){
   const d=getPartDone();
   d[part]=Math.max(d[part]||0, Math.round(pct));
   _partMem=d;
-  try{ localStorage.setItem(PART_KEY, JSON.stringify(d)); }catch(e){}
+  try{ localStorage.setItem(partKey(), JSON.stringify(d)); }catch(e){}
+}
+/* 의미분류퀴즈 통과 여부 (실전문제 잠금 해제 조건) */
+function isClassifyCleared(){
+  const d=getPartDone();
+  return (d.cls||0)>=80;
 }
 
 function quizMenu(){
   const wrap=document.getElementById('quizWrap');
   document.documentElement.style.setProperty('--gold','#b8893b');
   const done=getPartDone();
+  const cleared=isClassifyCleared();
   const badge=p => done[p]
     ? `<span class="qpart-done">✓ 완료 ${done[p]}%</span>` : '';
-  const cls=p => done[p] ? 'qpart cleared' : 'qpart';
+  /* 의미분류 미통과 시 모든 Part 잠금 */
+  const cls=p => {
+    if(!cleared) return 'qpart locked';
+    return done[p] ? 'qpart cleared' : 'qpart';
+  };
+  const onclick=fn => cleared ? `onclick="${fn}"` : 'disabled';
+  const lockIcon = cleared ? '' : '<span class="qpart-lock">🔒</span>';
+
+  /* 미통과 시 상단 안내 배너 */
+  const gateBanner = cleared ? '' : `
+    <div class="quiz-gate">
+      <div class="qg-badge">REQUIRED</div>
+      <div class="qg-title">먼저 의미 분류 퀴즈를 통과하세요</div>
+      <div class="qg-desc">실전 문제는 어원의 이미지가 머리에 박힌 후에 풀어야 효과적입니다.<br>
+        <b>의미 분류 퀴즈를 80% 이상 통과하면 자동으로 열립니다.</b></div>
+      <button class="qg-cta" onclick="go('tree');setTimeout(startClassify,300)">의미 분류 퀴즈 풀러 가기 ›</button>
+    </div>`;
+  /* 통과 시 가벼운 통과 표시 */
+  const passBanner = cleared ? `
+    <div class="quiz-pass">
+      <span class="qp-check">✓</span>
+      <span class="qp-text">개념 다지기 통과 · 실전 문제가 열렸습니다</span>
+    </div>` : '';
+
   wrap.innerHTML=`
     <div class="qmenu">
       <div class="qmenu-h">실전 문제</div>
       <div class="qmenu-sub">어원으로 단어를 추리하는 실전 훈련</div>
+      ${gateBanner}
+      ${passBanner}
 
-      <button class="${cls('p1')}" onclick="startInfer()">
+      <button class="${cls('p1')}" ${onclick('startInfer()')}>
         <div class="qpart-no">PART 01</div>
         <div class="qpart-t">어휘 추리력</div>
         <div class="qpart-d">처음 보는 단어라도 어원 힌트만으로<br>뜻을 추론하는 훈련</div>
         <div class="qpart-tag">23 문항 · 4지선다</div>
         ${badge('p1')}
+        ${lockIcon}
       </button>
 
-      <button class="${cls('p2')}" onclick="startBridge2()">
+      <button class="${cls('p2')}" ${onclick('startBridge2()')}>
         <div class="qpart-no">PART 02</div>
         <div class="qpart-t">단어 브릿지</div>
         <div class="qpart-d">품사·뜻과 어원 힌트만으로<br>단어를 유추해 직접 입력하기</div>
         <div class="qpart-tag">10문제 · 입력형</div>
         ${badge('p2')}
+        ${lockIcon}
       </button>
 
-      <button class="${cls('p3')}" onclick="startBridge()">
+      <button class="${cls('p3')}" ${onclick('startBridge()')}>
         <div class="qpart-no">PART 03</div>
         <div class="qpart-t">예문 빈칸</div>
         <div class="qpart-d">영어 예문 속 빈칸에<br>알맞은 단어를 직접 채우기</div>
         <div class="qpart-tag">14문제 중 10문제 · 입력형</div>
         ${badge('p3')}
+        ${lockIcon}
       </button>
 
       <div class="qmenu-note">
-        <b onclick="buildQuiz()">＋ 문장 적용 퀴즈</b> · 혼동 어휘와 빈칸 채우기 보조 연습<br>
-        개념이 아직이라면 <b onclick="go('tree');setTimeout(startClassify,350)">어원 트리의 ‘의미 분류 퀴즈’</b>부터
+        ${cleared
+          ? `<b onclick="buildQuiz()">＋ 문장 적용 퀴즈</b> · 혼동 어휘와 빈칸 채우기 보조 연습`
+          : `개념이 아직이라면 <b onclick="go('tree');setTimeout(startClassify,350)">어원 트리의 ‘의미 분류 퀴즈’</b>부터`}
       </div>
     </div>`;
 }
@@ -1834,15 +1941,31 @@ function showResult(kind,backTo){
   const wrap=document.getElementById(backTo==='classify'?'classifyWrap':'quizWrap');
   const pct=Math.round(qScore/Q.length*100);
   if(kind==='어휘 추리력') markPartDone('p1',pct);
-  let msg = pct>=80?'어원의 이미지가 확실히 잡혔습니다.\nper‑ 를 완전히 통과(through)했네요.'
-          : pct>=50?'절반 이상 통과했습니다.\n틀린 단어는 어원 풀이를 다시 떠올려보세요.'
-          : '어원 트리로 돌아가\n이미지부터 다시 그려보면 좋아요.';
-  const retryFn = backTo==='classify' ? 'startClassify()' : 'quizMenu()';
-  const retryLabel = backTo==='classify' ? '다시 풀기' : '실전 문제 메뉴로';
+  if(kind==='의미 분류') markPartDone('cls',pct);
+  const isClassify = (backTo==='classify');
+  const passed = pct>=80;
+  let msg;
+  if(isClassify){
+    msg = passed
+      ? `개념이 잡혔습니다. 이제 ${LESSON().root}의 어원 이미지가 머리에 박혔어요.\n실전 문제로 어휘력을 점검해보세요.`
+      : pct>=50 ? '절반 이상 통과했습니다.\n80% 이상 맞아야 실전 문제가 열립니다. 한 번 더!'
+                : '어원 트리로 돌아가\n이미지부터 다시 그려보면 좋아요.';
+  } else {
+    msg = passed ? '어원의 이미지가 확실히 잡혔습니다.\n다음 Part로 이어가세요.'
+        : pct>=50 ? '절반 이상 통과했습니다.\n틀린 단어는 어원 풀이를 다시 떠올려보세요.'
+                  : '어원 트리로 돌아가\n이미지부터 다시 그려보면 좋아요.';
+  }
+  const retryFn = isClassify ? 'startClassify()' : 'quizMenu()';
+  const retryLabel = isClassify ? '다시 풀기' : '실전 문제 메뉴로';
+  /* 의미분류 통과 시 실전문제로 가는 강조 버튼 추가 */
+  const ctaToQuiz = (isClassify && passed)
+    ? `<button class="q-retry q-cta-primary" onclick="go('quiz')">실전 문제로 가기 ›</button>`
+    : '';
   wrap.innerHTML=`<div class="q-result">
     <div class="score">${pct}<span style="font-size:24px">%</span></div>
     <div class="lbl">${qScore} / ${Q.length} 정답 · ${kind} 퀴즈</div>
     <div class="msg">${msg.replace(/\n/g,'<br>')}</div>
+    ${ctaToQuiz}
     <button class="q-retry" onclick="${retryFn}">${retryLabel}</button>
   </div>`;
 }
@@ -1908,7 +2031,8 @@ function go(s){
   const navEl=document.querySelector('nav');
   if(navEl) navEl.style.display = (s==='intro' || s==='cover' || s==='lessons') ? 'none' : '';
   if(s==='tree'){document.getElementById('nav-tree').classList.add('active');
-    document.documentElement.style.setProperty('--gold','#b8893b');updateRings();}
+    document.documentElement.style.setProperty('--gold','#b8893b');updateRings();
+    updateConceptCta();}
   if(s==='group')document.getElementById('nav-tree').classList.add('active');
   if(s==='classify')document.getElementById('nav-tree').classList.add('active');
   if(s==='quiz'){document.getElementById('nav-quiz').classList.add('active');quizMenu();}
@@ -2010,6 +2134,24 @@ function applyLessonMeta(){
   if(c3) c3.textContent=LESSON().meaning;
   const c4=document.querySelector('.cover-ko');
   if(c4) c4.textContent=LESSON().ko;
+  updateConceptCta();
+}
+/* 의미분류 통과 여부에 따라 트리 화면 CTA 외형 갱신 */
+function updateConceptCta(){
+  const cta=document.getElementById('conceptCta');
+  if(!cta) return;
+  const cleared=isClassifyCleared();
+  cta.classList.toggle('cleared', cleared);
+  const must=cta.querySelector('.cc-must');
+  if(must) must.textContent = cleared ? '✓ COMPLETED · 통과 완료' : 'REQUIRED · 필수 관문';
+  const desc=cta.querySelector('.cc-desc');
+  if(desc){
+    desc.innerHTML = cleared
+      ? `이미 통과한 관문입니다. 실전 문제가 열려 있어요.<br><b>다시 풀어 정답률을 올려도 좋습니다.</b>`
+      : `단어가 어원의 어떤 이미지에서 나왔는지 분류하는 연습입니다.<br><b>80% 이상 통과해야 실전 문제가 열립니다.</b>`;
+  }
+  const go=document.getElementById('ccGo');
+  if(go) go.textContent = cleared ? '다시 풀기 ›' : '시작하기 ›';
 }
 
 /* ===== 표지 화면 ===== */
